@@ -7,6 +7,8 @@ using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 using System.CommandLine;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Runtime.Intrinsics.X86;
 
 
 internal class Program
@@ -18,22 +20,59 @@ internal class Program
         Option<bool> showCS = new(new string[] { "--show-cs", "-s" }, () => false, "Shows the CSharp equivalent code");
         Option<string[]> csUsing = new(new string[] { "--using", "-u" }, () => new string[] { "System","System.Collections", "System.Collections.Generic" }, "The namespaces that CSharp compiler will use");
         Argument<List<string>> progArgs = new("--args",() => new(), "The arguments passed to the IsoSec program");
+        Option<bool> hideInfo = new(new string[] { "--hide-info", "-hi" }, () => false, "Hides command info lines");
 
-        RootCommand cmd = new();
+        RootCommand cmd = new("Simple IsoSec language transpiller and compiler");
 
         cmd.AddArgument(sourceFile);
         cmd.AddOption(csOutput);
         cmd.AddOption(showCS);
         cmd.AddOption(csUsing);
         cmd.AddArgument(progArgs);
+        cmd.AddOption(hideInfo);
 
-        cmd.SetHandler(CompileSource,sourceFile, csOutput, showCS, csUsing, progArgs);
+        cmd.SetHandler(CompileSource,sourceFile, csOutput, showCS, csUsing, progArgs, hideInfo);
 
         return await cmd.InvokeAsync(args);
     }
-    static void CompileSource(FileInfo file, FileInfo? csFile,bool showCS, string[] usings, List<string> args)
+    static void CompileSource(FileInfo file, FileInfo? csFile,bool showCS, string[] usings, List<string> args, bool hideInfo)
     {
+        List<string> usingsList = new(usings);
         string source = File.ReadAllText(file.FullName);
+        Regex argsRe = new(@"^\s*(\/\*(?:.*\n)*\*\/|(?:\/{2}.*\n)*)");
+        Regex argRe = new(@"(?:\/)*(.*):(.*)");
+        Match argsMatch = argsRe.Match(source);
+        Dictionary<string,string> fArgs = new();
+        if (argsMatch.Success)
+        {
+            string[] fileArgs = argsMatch.Groups[1].Value.Split("\n",StringSplitOptions.RemoveEmptyEntries);
+            foreach (string arg in fileArgs)
+            {
+                Match argMatch = argRe.Match(arg);
+                if (argMatch.Success)
+                {
+                    string key = argMatch.Groups[1].Value.Trim();
+                    string val = argMatch.Groups[2].Value.Trim();
+                    if (!fArgs.ContainsKey(key))
+                        fArgs.Add(key, val);
+                }
+            }
+
+        }
+        if (fArgs.ContainsKey("Author") && !hideInfo)
+            Console.WriteLine($"Script Author: {fArgs["Author"]}");
+        if (fArgs.ContainsKey("Usings"))
+            Array.ForEach(fArgs["Usings"].Split(","),
+                (u) =>
+                {
+                    string use = u.Trim();
+                    if (!usingsList.Contains(use))
+                        usingsList.Add(use);
+                });
+        if (!hideInfo) {
+            Console.WriteLine($"Used libraries: {string.Join(", ", usingsList)}");
+            Console.WriteLine("".PadRight(Console.WindowWidth, '-'));
+        }
 
         ICharStream code = CharStreams.fromString(source);
         ITokenSource lexer = new IsoSecLexer(code);
@@ -41,7 +80,7 @@ internal class Program
         IsoSecParser parser = new(tokens);
         IsoSec2CSVisitor visitor = new();
         string csCode = visitor.Visit(parser.program());
-        string headerStr = string.Join("\n", usings.Select((u) => $"using {u};"));
+        string headerStr = string.Join("\n", usingsList.Select((u) => $"using {u};"));
         string fullCSCode = $"{headerStr}\n\n{csCode}";
         
         if (showCS)
@@ -51,7 +90,7 @@ internal class Program
 
         if (csFile != null)
         {
-            Console.WriteLine(fullCSCode);
+            Console.WriteLine($"Writing C# code to '{csFile.FullName}'...");
             File.WriteAllText(csFile.FullName, fullCSCode);
         }
         else

@@ -1,3 +1,8 @@
+/*
+Author: Oscar Wohlfarhrt
+Usings: System, System.IO
+*/
+
 float test = 0f
 float var1 = 5f
 float var2 = 3f
