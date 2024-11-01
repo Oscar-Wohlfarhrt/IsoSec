@@ -1,0 +1,5 @@
+﻿void function Main(string[] args)
+    Console.Write($"Ingrese un texto: ")
+    string str = Console.ReadLine()
+    Console.WriteLine($"Hola {str} desde IsoSec!")
+end
