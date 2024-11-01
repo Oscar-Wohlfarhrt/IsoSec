@@ -10,6 +10,8 @@ For aditional info and syntax see [IsoSec Syntax](#isosec-syntax)
 
 ## IsoSec Command
 
+Is recomended to add the executable file to the `PATH` enviromental variable of the operating system. 
+
 This is the command help:
 ```
 Description:
