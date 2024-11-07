@@ -1,0 +1,15 @@
+/*
+    Author: Oscar Wohlfarhrt
+    Usings: System.IO
+
+    If is compiled with "IsoSec ./TestingSourceIsolation.isc" will work.
+    But if is compiled with "IsoSec ./TestingSourceIsolation.isc --ignore-file-usings"
+    will throw an error, preventing it for executing file read/write releated operations.
+
+    This file demostrates the isolation and security properties of IsoSec.
+*/
+
+//this prints this code it self, only to using file related operations.
+void function Main(string[] args)
+    Console.WriteLine(File.ReadAllText(args[0]))
+end

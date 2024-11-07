@@ -21,6 +21,7 @@ internal class Program
         Option<string[]> csUsing = new(new string[] { "--using", "-u" }, () => new string[] { "System","System.Collections", "System.Collections.Generic" }, "The namespaces that CSharp compiler will use");
         Argument<List<string>> progArgs = new("--args",() => new(), "The arguments passed to the IsoSec program");
         Option<bool> hideInfo = new(new string[] { "--hide-info", "-hi" }, () => false, "Hides command info lines");
+        Option<bool> ignFileUsings = new(new string[] { "--ignore-file-usings", "-ifu" }, () => false, "Ignores any using included on the file header");
 
         RootCommand cmd = new("Simple IsoSec language transpiller and compiler");
 
@@ -30,12 +31,13 @@ internal class Program
         cmd.AddOption(csUsing);
         cmd.AddArgument(progArgs);
         cmd.AddOption(hideInfo);
+        cmd.AddOption(ignFileUsings);
 
-        cmd.SetHandler(CompileSource,sourceFile, csOutput, showCS, csUsing, progArgs, hideInfo);
+        cmd.SetHandler(CompileSource,sourceFile, csOutput, showCS, csUsing, progArgs, hideInfo, ignFileUsings);
 
         return await cmd.InvokeAsync(args);
     }
-    static void CompileSource(FileInfo file, FileInfo? csFile,bool showCS, string[] usings, List<string> args, bool hideInfo)
+    static void CompileSource(FileInfo file, FileInfo? csFile, bool showCS, string[] usings, List<string> args, bool hideInfo, bool ignFileUsings)
     {
         List<string> usingsList = new(usings);
         string source = File.ReadAllText(file.FullName);
@@ -61,7 +63,7 @@ internal class Program
         }
         if (fArgs.ContainsKey("Author") && !hideInfo)
             Console.WriteLine($"Script Author: {fArgs["Author"]}");
-        if (fArgs.ContainsKey("Usings"))
+        if (fArgs.ContainsKey("Usings") && !ignFileUsings)
             Array.ForEach(fArgs["Usings"].Split(","),
                 (u) =>
                 {
@@ -69,7 +71,10 @@ internal class Program
                     if (!usingsList.Contains(use))
                         usingsList.Add(use);
                 });
-        if (!hideInfo) {
+        else if (!hideInfo)
+            Console.WriteLine($"Ignoring file libraries");
+        if (!hideInfo)
+        {
             Console.WriteLine($"Used libraries: {string.Join(", ", usingsList)}");
             Console.WriteLine("".PadRight(Console.WindowWidth, '-'));
         }
@@ -85,7 +90,8 @@ internal class Program
         
         if (showCS)
         {
-            Console.WriteLine(fullCSCode);
+            Console.Write(fullCSCode);
+            Console.WriteLine("".PadRight(Console.WindowWidth, '-'));
         }
 
         if (csFile != null)

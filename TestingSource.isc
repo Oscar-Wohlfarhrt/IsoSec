@@ -1,6 +1,8 @@
 /*
-Author: Oscar Wohlfarhrt
-Usings: System, System.IO
+    Author: Oscar Wohlfarhrt
+
+    This file is a simple test with some console outputs, math operations
+    and object creations to test IsoSec functionalities.
 */
 
 float test = 0f
