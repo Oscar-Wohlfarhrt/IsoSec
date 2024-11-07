@@ -53,5 +53,5 @@ _Note: if you are using single line comments, they all need to be continous. Sin
 ## IsoSec Syntax
 
 The language specifications are in this file:
-- Spanish Version: [IsoSec: Un lenguaje de programación aislado y
-seguro]()
+- Spanish Version: [IsoSec: Un lenguaje de programaciÃ³n aislado y
+seguro](./IsoSec-Compiladores---Balbuena--Hillebrand-y-Wohlfarhrt.pdf)
