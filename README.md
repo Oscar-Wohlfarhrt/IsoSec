@@ -54,4 +54,4 @@ _Note: if you are using single line comments, they all need to be continous. Sin
 
 The language specifications are in this file:
 - Spanish Version: [IsoSec: Un lenguaje de programación aislado y
-seguro](./IsoSec-Compiladores---Balbuena--Hillebrand-y-Wohlfarhrt.pdf)
+seguro](./IsoSec%20Compiladores%20-%20Balbuena%2C%20Hillebrand%20y%20Wohlfarhrt.pdf)
